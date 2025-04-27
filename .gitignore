@@ -4,6 +4,13 @@
 dist
 tmp
 out-tsc
+/envs
+/apps/mongo
+/apps/minio
+/apps/rabbit
+/apps/duplicate-checker/app/__pycache__
+/apps/duplicate-checker/app/venv
+/apps/model-service
 
 # dependencies
 node_modules
@@ -40,3 +47,4 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
+.qodo

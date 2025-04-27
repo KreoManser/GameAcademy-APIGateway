@@ -14,6 +14,10 @@
     ],
     "sharedGlobals": []
   },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "shared"
+  },
   "nxCloudId": "680e1e9cf7d820161ac2e3df",
   "plugins": [
     {
@@ -37,7 +41,18 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["apps/APIGateway-e2e/**/*"]
+      "exclude": [
+        "apps/account-e2e/**/*",
+        "apps/api-e2e/**/*",
+        "apps/projects-e2e/**/*"
+      ]
     }
-  ]
+  ],
+  "targetDefaults": {
+    "@nx/js:tsc": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    }
+  }
 }

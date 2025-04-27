@@ -8,13 +8,28 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "target": "ES2021",
     "module": "esnext",
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@shared/contracts": ["shared/contracts/src/index.ts"],
+      "@shared/interfaces": ["shared/interfaces/src/index.ts"]
+    },
+    "types": ["node", "express", "multer", "jest"],
+    "typeRoots": ["node_modules/@types", "shared/types"],
+    "removeComments": true,
+    "allowSyntheticDefaultImports": true,
+    "incremental": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "strict": true,
+    "strictPropertyInitialization": false
   },
   "exclude": ["node_modules", "tmp"]
 }
