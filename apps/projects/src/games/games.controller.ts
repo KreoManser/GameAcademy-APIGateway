@@ -8,6 +8,7 @@ import {
   Param,
   UploadedFiles,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { GamesService } from './games.service';
@@ -57,8 +58,8 @@ export class GamesController {
   }
 
   @Get()
-  async list() {
-    return this.gamesService.findAll();
+  async list(@Query('q') q?: string) {
+    return this.gamesService.findAll(q);
   }
 
   @Get(':id')

@@ -92,8 +92,17 @@ export class GamesService {
     return game.save();
   }
 
-  async findAll(): Promise<GameDocument[]> {
-    return this.gameModel.find().sort({ createdAt: -1 }).exec();
+  async findAll(q?: string): Promise<GameDocument[]> {
+    if (!q) {
+      return this.gameModel.find().sort({ createdAt: -1 }).exec();
+    }
+    const regex = new RegExp(q, 'i');
+    return this.gameModel
+      .find({
+        $or: [{ title: regex }, { description: regex }, { genres: q }],
+      })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async findOne(id: string): Promise<GameDocument> {

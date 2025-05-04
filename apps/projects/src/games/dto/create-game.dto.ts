@@ -13,4 +13,8 @@ export class CreateGameDto {
   @ArrayUnique()
   @IsString({ each: true })
   genres: string[];
+
+  @IsOptional()
+  @IsString()
+  cover: string;
 }
