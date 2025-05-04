@@ -1,3 +1,4 @@
+// src/minio/minio.service.ts
 import {
   S3Client,
   PutObjectCommand,
@@ -5,14 +6,16 @@ import {
   CreateBucketCommand,
   HeadBucketCommand,
 } from '@aws-sdk/client-s3';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
 import * as stream from 'stream';
 
 @Injectable()
-export class MinioService {
+export class MinioService implements OnModuleInit {
   private client: S3Client;
   private bucket: string;
   private modelsBucket: string;
+  private imagesBucket: string;
+  private videosBucket: string;
 
   constructor() {
     const {
@@ -21,11 +24,15 @@ export class MinioService {
       MINIO_SECRET_KEY,
       MINIO_BUCKET,
       MINIO_MODELS_BUCKET,
+      MINIO_IMAGES_BUCKET,
+      MINIO_VIDEOS_BUCKET,
       MINIO_FORCE_PATH_STYLE,
       MINIO_PROTOCOL,
     } = process.env;
     this.bucket = MINIO_BUCKET;
     this.modelsBucket = MINIO_MODELS_BUCKET;
+    this.imagesBucket = MINIO_IMAGES_BUCKET!;
+    this.videosBucket = MINIO_VIDEOS_BUCKET!;
     this.client = new S3Client({
       endpoint: `${MINIO_PROTOCOL}://${MINIO_ENDPOINT}`,
       region: 'us-east-1',
@@ -35,13 +42,13 @@ export class MinioService {
       },
       forcePathStyle: MINIO_FORCE_PATH_STYLE === 'true',
     });
-    // this.ensureBucketExists(this.bucket);
-    // this.ensureBucketExists(this.modelsBucket);
   }
 
   async onModuleInit() {
-    await this.ensureBucketExists(this.bucket);
-    await this.ensureBucketExists(this.modelsBucket);
+    // убеждаемся, что все бакеты существуют
+    for (const name of [this.bucket, this.modelsBucket, this.imagesBucket, this.videosBucket]) {
+      await this.ensureBucketExists(name);
+    }
   }
 
   private async ensureBucketExists(name: string) {
@@ -58,48 +65,58 @@ export class MinioService {
         console.log(`✅ Created bucket ${name}`);
         return;
       }
-
-      // Минё не позволяет даже HEAD проверить из-за политики —
-      // считаем, что бакет есть, но политику игнорируем
       if (isRulesError) {
-        console.warn(`Bucket "${name}" exists, but policy evaluation failed, continuing startup.`);
+        console.warn(`Bucket "${name}" exists with policy error, continuing.`);
         return;
       }
-
-      // Во всех прочих случаях — действительно ошибка
-      throw new InternalServerErrorException(`MinIO bucket "${name}" check failed: ${err.message || err}`);
+      throw new InternalServerErrorException(`MinIO bucket "${name}" check failed: ${err.message}`);
     }
   }
 
-  async uploadObject(key: string, body: Buffer | stream.Readable, contentType: string, contentEncoding?: string) {
+  async uploadObject(
+    bucketName: string,
+    key: string,
+    body: Buffer | stream.Readable,
+    contentType: string,
+    contentEncoding?: string,
+  ) {
     const params: PutObjectCommandInput = {
-      Bucket: this.bucket,
+      Bucket: bucketName,
       Key: key,
       Body: body,
       ContentType: contentType,
-      // вместо entry.path — используем переданный contentEncoding
       ...(contentEncoding ? { ContentEncoding: contentEncoding } : {}),
     };
     try {
       await this.client.send(new PutObjectCommand(params));
     } catch (err: any) {
-      throw new InternalServerErrorException(`MinIO upload error: ${err.message || err}`);
+      throw new InternalServerErrorException(`MinIO upload error: ${err.message}`);
     }
   }
 
-  async uploadModel(key: string, body: Buffer | stream.Readable, contentType: string) {
-    const params: PutObjectCommandInput = {
-      Bucket: this.modelsBucket,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-    };
-    await this.client.send(new PutObjectCommand(params));
+  // Удобные методы
+  uploadBuild(key: string, body: Buffer, contentType: string, contentEncoding?: string) {
+    return this.uploadObject(this.bucket, key, body, contentType, contentEncoding);
+  }
+  uploadModel(key: string, body: Buffer, contentType: string) {
+    return this.uploadObject(this.modelsBucket, key, body, contentType);
+  }
+  uploadImage(key: string, body: Buffer, contentType: string) {
+    return this.uploadObject(this.imagesBucket, key, body, contentType);
+  }
+  uploadVideo(key: string, body: Buffer, contentType: string) {
+    return this.uploadObject(this.videosBucket, key, body, contentType);
   }
 
-  getPublicUrl(key: string, forModels = false) {
+  getPublicUrl(key: string, bucket: 'build' | 'models' | 'images' | 'videos' = 'build') {
     const { MINIO_ENDPOINT, MINIO_PROTOCOL } = process.env;
-    const bucket = forModels ? this.modelsBucket : this.bucket;
-    return `${MINIO_PROTOCOL}://${MINIO_ENDPOINT}/${bucket}/${key}`;
+    const buckets = {
+      build: this.bucket,
+      models: this.modelsBucket,
+      images: this.imagesBucket,
+      videos: this.videosBucket,
+    };
+    const b = buckets[bucket];
+    return `${MINIO_PROTOCOL}://${MINIO_ENDPOINT}/${b}/${key}`;
   }
 }

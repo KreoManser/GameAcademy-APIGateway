@@ -7,10 +7,7 @@ import { Game, GameSchema } from './schemas/game.schema';
 import { MinioModule } from '../minio/minio.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Game.name, schema: GameSchema }]),
-    MinioModule,
-  ],
+  imports: [MongooseModule.forFeature([{ name: Game.name, schema: GameSchema }]), MinioModule],
   controllers: [GamesController],
   providers: [GamesService],
 })

@@ -8,8 +8,12 @@ export type GameDocument = Game & Document;
 export class Game {
   @Prop({ required: true }) title: string;
   @Prop() description: string;
-  @Prop({ required: true }) prefix: string; // "ae3f9f4c/"
-  @Prop({ type: [String], default: [] }) models: string[]; // ключи в models-bucket
+  @Prop({ required: true }) prefix: string;
+  @Prop({ type: [String], default: [] }) models: string[];
+  @Prop({ type: [String], default: [] }) images: string[];
+  @Prop({ type: [String], default: [] }) videos: string[];
+  @Prop({ type: [String], default: [] }) genres: string[];
+  @Prop({ required: true }) uploader: string;
 }
 
 export const GameSchema = SchemaFactory.createForClass(Game);

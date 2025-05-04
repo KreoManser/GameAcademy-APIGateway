@@ -21,7 +21,9 @@ export class GamesController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'file', maxCount: 1 },
-      { name: 'models', maxCount: 10 },
+      { name: 'models', maxCount: 20 },
+      { name: 'images', maxCount: 20 },
+      { name: 'videos', maxCount: 10 },
     ]),
   )
   async uploadGame(
@@ -29,12 +31,14 @@ export class GamesController {
     files: {
       file?: Express.Multer.File[];
       models?: Express.Multer.File[];
+      images?: Express.Multer.File[];
+      videos?: Express.Multer.File[];
     },
     @Body() createDto: CreateGameDto,
   ) {
     const gameFile = files.file?.[0];
     if (!gameFile) throw new BadRequestException('Game ZIP is required');
-    return this.gamesService.create(createDto, gameFile.buffer, files.models);
+    return this.gamesService.create(createDto, gameFile.buffer, files.models, files.images, files.videos);
   }
 
   @Get()
