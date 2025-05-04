@@ -31,8 +31,8 @@ export class MinioService implements OnModuleInit {
     } = process.env;
     this.bucket = MINIO_BUCKET;
     this.modelsBucket = MINIO_MODELS_BUCKET;
-    this.imagesBucket = MINIO_IMAGES_BUCKET!;
-    this.videosBucket = MINIO_VIDEOS_BUCKET!;
+    this.imagesBucket = MINIO_IMAGES_BUCKET;
+    this.videosBucket = MINIO_VIDEOS_BUCKET;
     this.client = new S3Client({
       endpoint: `${MINIO_PROTOCOL}://${MINIO_ENDPOINT}`,
       region: 'us-east-1',

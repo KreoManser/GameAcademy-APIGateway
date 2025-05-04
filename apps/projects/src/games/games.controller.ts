@@ -21,6 +21,7 @@ export class GamesController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'file', maxCount: 1 },
+      { name: 'cover', maxCount: 1 }, // ← главное фото
       { name: 'models', maxCount: 20 },
       { name: 'images', maxCount: 20 },
       { name: 'videos', maxCount: 10 },
@@ -30,6 +31,7 @@ export class GamesController {
     @UploadedFiles()
     files: {
       file?: Express.Multer.File[];
+      cover?: Express.Multer.File[]; // ← сюда пойдёт cover[0]
       models?: Express.Multer.File[];
       images?: Express.Multer.File[];
       videos?: Express.Multer.File[];
@@ -38,7 +40,20 @@ export class GamesController {
   ) {
     const gameFile = files.file?.[0];
     if (!gameFile) throw new BadRequestException('Game ZIP is required');
-    return this.gamesService.create(createDto, gameFile.buffer, files.models, files.images, files.videos);
+
+    const coverFile = files.cover?.[0];
+    if (!coverFile) throw new BadRequestException('Cover image is required');
+
+    return this.gamesService.create(
+      createDto,
+      gameFile.buffer,
+      files.models,
+      files.images,
+      files.videos,
+      coverFile.buffer,
+      coverFile.originalname,
+      coverFile.mimetype,
+    );
   }
 
   @Get()

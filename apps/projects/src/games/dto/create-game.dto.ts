@@ -3,8 +3,11 @@ import { IsString, IsOptional, IsArray, ArrayNotEmpty, ArrayUnique } from 'class
 
 export class CreateGameDto {
   @IsString() title: string;
+
   @IsString() description: string;
+
   @IsString() uploader: string;
+
   @IsArray()
   @ArrayNotEmpty()
   @ArrayUnique()

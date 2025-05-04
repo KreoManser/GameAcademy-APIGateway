@@ -7,7 +7,7 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { MinioService } from '../minio/minio.service';
 import * as unzipper from 'unzipper';
 import { randomBytes } from 'crypto';
-import 'multer';
+import multer from 'multer';
 
 @Injectable()
 export class GamesService {
@@ -22,28 +22,31 @@ export class GamesService {
     modelFiles?: Express.Multer.File[],
     imageFiles?: Express.Multer.File[],
     videoFiles?: Express.Multer.File[],
+    coverBuffer?: Buffer, // ← буффер cover
+    coverName?: string, // ← имя файла
+    coverMime?: string, // ← mimetype
   ): Promise<GameDocument> {
     const prefix = randomBytes(4).toString('hex') + '/';
     const modelsKeys: string[] = [];
     const imagesKeys: string[] = [];
     const videosKeys: string[] = [];
 
-    // 1) Build files
+    // 1) Билд WebGL
     const dir = await unzipper.Open.buffer(gameBuffer);
     await Promise.all(
       dir.files.map(async (entry) => {
         if (entry.type !== 'File') return;
         const buf = await entry.buffer();
         const key = `${prefix}${entry.path}`;
-        let contentType = 'application/octet-stream';
-        if (/\.js(\.br)?$/.test(entry.path)) contentType = 'application/javascript';
-        else if (/\.wasm(\.br)?$/.test(entry.path)) contentType = 'application/wasm';
-        const contentEncoding = entry.path.endsWith('.br') ? 'br' : undefined;
-        await this.minio.uploadBuild(key, buf, contentType, contentEncoding);
+        let ct = 'application/octet-stream';
+        if (/\.js(\.br)?$/.test(entry.path)) ct = 'application/javascript';
+        else if (/\.wasm(\.br)?$/.test(entry.path)) ct = 'application/wasm';
+        const ce = entry.path.endsWith('.br') ? 'br' : undefined;
+        await this.minio.uploadBuild(key, buf, ct, ce);
       }),
     );
 
-    // 2) Models
+    // 2) Модели
     if (modelFiles) {
       for (const f of modelFiles) {
         const key = `${prefix}models/${f.originalname}`;
@@ -51,7 +54,8 @@ export class GamesService {
         modelsKeys.push(key);
       }
     }
-    // 3) Images
+
+    // 3) Изображения
     if (imageFiles) {
       for (const f of imageFiles) {
         const key = `${prefix}images/${f.originalname}`;
@@ -59,7 +63,8 @@ export class GamesService {
         imagesKeys.push(key);
       }
     }
-    // 4) Videos
+
+    // 4) Видео
     if (videoFiles) {
       for (const f of videoFiles) {
         const key = `${prefix}videos/${f.originalname}`;
@@ -68,13 +73,21 @@ export class GamesService {
       }
     }
 
-    // 5) Save to Mongo
+    // 5) Cover
+    if (!coverBuffer || !coverName || !coverMime) {
+      throw new NotFoundException('Cover missing');
+    }
+    const coverKey = `${prefix}cover/${coverName}`;
+    await this.minio.uploadImage(coverKey, coverBuffer, coverMime);
+
+    // 6) Сохраняем в Mongo
     const game = new this.gameModel({
       ...createDto,
       prefix,
       models: modelsKeys,
       images: imagesKeys,
       videos: videosKeys,
+      cover: coverKey, // ← сохраняем coverKey
     });
     return game.save();
   }
