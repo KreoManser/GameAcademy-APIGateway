@@ -50,20 +50,24 @@ export class GamesController {
 
     return this.gamesService.create(
       createDto,
-      gameFile?.buffer, // может быть undefined
+      gameFile?.buffer,
       files.models,
       files.images,
       files.videos,
       coverFile.buffer,
       coverFile.originalname,
       coverFile.mimetype,
-      !!gameFile, // playable флаг
+      !!gameFile,
     );
   }
 
+  // src/games/games.controller.ts
   @Get()
-  async list(@Query('q') q?: string) {
-    return this.gamesService.findAll(q);
+  async list(
+    @Query('q') q?: string,
+    @Query('uploader') uploader?: string, // ← добавили
+  ) {
+    return this.gamesService.findAll(q, uploader);
   }
 
   @Get(':id')

@@ -5,3 +5,5 @@ export * from './lib/account/account.register';
 export * from './lib/account/account.user-info';
 export * from './lib/project/game.create';
 export * from './lib/project/game.get-all';
+export * from './lib/project/comment.create';
+export * from './lib/project/comment.list';

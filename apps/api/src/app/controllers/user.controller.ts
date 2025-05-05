@@ -1,5 +1,5 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { AccountChangeRole } from '@shared/contracts';
+import { AccountChangeRole, AccountUserInfo } from '@shared/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { JWTAuthGuard } from '../guards/jwt.guard';
 import { UserId } from '../guards/user.decorator';
@@ -9,8 +9,13 @@ export class UserContoller {
   constructor(private readonly rmqService: RMQService) {}
   @UseGuards(JWTAuthGuard)
   @Post('info')
-  async info(@UserId() userId: string) {
-    return 'test';
+  async info(@UserId() userId: string): Promise<AccountUserInfo.Response> {
+    // посылаем RMQ-запрос в микросервис «user» на получение профиля
+    const response = await this.rmqService.send<AccountUserInfo.Request, AccountUserInfo.Response>(
+      AccountUserInfo.topic,
+      { id: userId },
+    );
+    return response;
   }
 
   @UseGuards(JWTAuthGuard)

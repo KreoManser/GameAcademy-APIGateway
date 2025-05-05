@@ -3,9 +3,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { getMongoConfig } from './configs/mongo.config'; // ваш helper
+import { getMongoConfig } from './configs/mongo.config';
 import { GamesModule } from './games/games.module';
 import { MinioModule } from './minio/minio.module';
+import { CommentsModule } from './comments/comments.module';
+import { getRMQConfig } from './configs/rmq.config';
+import { RMQModule } from 'nestjs-rmq';
 
 @Module({
   imports: [
@@ -14,7 +17,9 @@ import { MinioModule } from './minio/minio.module';
       envFilePath: 'envs/.projects.env',
     }),
     MongooseModule.forRootAsync(getMongoConfig()),
+    RMQModule.forRootAsync(getRMQConfig()),
     MinioModule,
+    CommentsModule,
     GamesModule,
   ],
 })

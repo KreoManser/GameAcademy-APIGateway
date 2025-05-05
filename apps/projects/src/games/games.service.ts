@@ -96,17 +96,20 @@ export class GamesService {
     return game.save();
   }
 
-  async findAll(q?: string): Promise<GameDocument[]> {
-    if (!q) {
-      return this.gameModel.find().sort({ createdAt: -1 }).exec();
+  async findAll(q?: string, uploader?: string): Promise<GameDocument[]> {
+    const filter: any = {};
+
+    if (uploader) {
+      filter.uploader = uploader;
     }
-    const regex = new RegExp(q, 'i');
-    return this.gameModel
-      .find({
-        $or: [{ title: regex }, { description: regex }, { genres: q }],
-      })
-      .sort({ createdAt: -1 })
-      .exec();
+
+    if (q) {
+      const regex = new RegExp(q, 'i');
+      // Если одновременно есть uploader и q — поиск внутри его игр
+      filter.$or = [{ title: regex }, { description: regex }, { genres: q }];
+    }
+
+    return this.gameModel.find(filter).sort({ createdAt: -1 }).exec();
   }
 
   async findOne(id: string): Promise<GameDocument> {

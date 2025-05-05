@@ -9,6 +9,7 @@ import { AuthContoller } from './controllers/auth.controller';
 // import { ProjectController } from './controllers/project.controller';
 import { UserContoller } from './controllers/user.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { CommentsController } from './controllers/comments.controller';
 
 @Module({
   imports: [
@@ -18,11 +19,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync(getJwtConfig()),
     PassportModule,
   ],
-  controllers: [
-    AuthContoller,
-    UserContoller,
-    // ProjectController
-  ],
+  controllers: [AuthContoller, UserContoller, CommentsController],
   providers: [JwtStrategy],
   exports: [PassportModule, JwtModule],
 })
