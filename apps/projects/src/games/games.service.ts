@@ -18,13 +18,14 @@ export class GamesService {
 
   async create(
     createDto: CreateGameDto,
-    gameBuffer: Buffer,
+    gameBuffer?: Buffer,
     modelFiles?: Express.Multer.File[],
     imageFiles?: Express.Multer.File[],
     videoFiles?: Express.Multer.File[],
-    coverBuffer?: Buffer, // ← буффер cover
-    coverName?: string, // ← имя файла
-    coverMime?: string, // ← mimetype
+    coverBuffer?: Buffer,
+    coverName?: string,
+    coverMime?: string,
+    playable = false, // ← новый аргумент
   ): Promise<GameDocument> {
     const prefix = randomBytes(4).toString('hex') + '/';
     const modelsKeys: string[] = [];
@@ -32,19 +33,21 @@ export class GamesService {
     const videosKeys: string[] = [];
 
     // 1) Билд WebGL
-    const dir = await unzipper.Open.buffer(gameBuffer);
-    await Promise.all(
-      dir.files.map(async (entry) => {
-        if (entry.type !== 'File') return;
-        const buf = await entry.buffer();
-        const key = `${prefix}${entry.path}`;
-        let ct = 'application/octet-stream';
-        if (/\.js(\.br)?$/.test(entry.path)) ct = 'application/javascript';
-        else if (/\.wasm(\.br)?$/.test(entry.path)) ct = 'application/wasm';
-        const ce = entry.path.endsWith('.br') ? 'br' : undefined;
-        await this.minio.uploadBuild(key, buf, ct, ce);
-      }),
-    );
+    if (playable && gameBuffer) {
+      const dir = await unzipper.Open.buffer(gameBuffer);
+      await Promise.all(
+        dir.files.map(async (e) => {
+          if (e.type !== 'File') return;
+          const buf = await e.buffer();
+          const key = `${prefix}${e.path}`;
+          let ct = 'application/octet-stream';
+          if (/\.js(\.br)?$/.test(e.path)) ct = 'application/javascript';
+          else if (/\.wasm(\.br)?$/.test(e.path)) ct = 'application/wasm';
+          const ce = e.path.endsWith('.br') ? 'br' : undefined;
+          await this.minio.uploadBuild(key, buf, ct, ce);
+        }),
+      );
+    }
 
     // 2) Модели
     if (modelFiles) {
@@ -87,7 +90,8 @@ export class GamesService {
       models: modelsKeys,
       images: imagesKeys,
       videos: videosKeys,
-      cover: coverKey, // ← сохраняем coverKey
+      cover: `${prefix}cover/${coverName}`,
+      playable, // ← сохраняем флаг
     });
     return game.save();
   }

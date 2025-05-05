@@ -22,7 +22,7 @@ export class GamesController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'file', maxCount: 1 },
-      { name: 'cover', maxCount: 1 }, // ← главное фото
+      { name: 'cover', maxCount: 1 },
       { name: 'models', maxCount: 20 },
       { name: 'images', maxCount: 20 },
       { name: 'videos', maxCount: 10 },
@@ -32,28 +32,32 @@ export class GamesController {
     @UploadedFiles()
     files: {
       file?: Express.Multer.File[];
-      cover?: Express.Multer.File[]; // ← сюда пойдёт cover[0]
+      cover?: Express.Multer.File[];
       models?: Express.Multer.File[];
       images?: Express.Multer.File[];
       videos?: Express.Multer.File[];
     },
     @Body() createDto: CreateGameDto,
   ) {
-    const gameFile = files.file?.[0];
-    if (!gameFile) throw new BadRequestException('Game ZIP is required');
-
     const coverFile = files.cover?.[0];
     if (!coverFile) throw new BadRequestException('Cover image is required');
 
+    const gameFile = files.file?.[0];
+    // Если нет ZIP и нет ссылки — ошибка
+    if (!gameFile && !createDto.githubUrl) {
+      throw new BadRequestException('Either a ZIP build or a GitHub URL must be provided');
+    }
+
     return this.gamesService.create(
       createDto,
-      gameFile.buffer,
+      gameFile?.buffer, // может быть undefined
       files.models,
       files.images,
       files.videos,
       coverFile.buffer,
       coverFile.originalname,
       coverFile.mimetype,
+      !!gameFile, // playable флаг
     );
   }
 

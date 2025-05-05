@@ -23,6 +23,10 @@ export class Game {
   @Prop({ required: true }) uploader: string;
 
   @Prop({ required: true }) cover: string;
+
+  @Prop() githubUrl?: string;
+
+  @Prop({ default: false }) playable: boolean;
 }
 
 export const GameSchema = SchemaFactory.createForClass(Game);
