@@ -7,7 +7,7 @@ import { getJwtConfig } from './configs/jwt.config';
 import { getRMQConfig } from './configs/rmq.config';
 import { AuthContoller } from './controllers/auth.controller';
 // import { ProjectController } from './controllers/project.controller';
-import { UserContoller } from './controllers/user.controller';
+import { UserController } from './controllers/user.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { CommentsController } from './controllers/comments.controller';
 
@@ -19,7 +19,7 @@ import { CommentsController } from './controllers/comments.controller';
     JwtModule.registerAsync(getJwtConfig()),
     PassportModule,
   ],
-  controllers: [AuthContoller, UserContoller, CommentsController],
+  controllers: [AuthContoller, UserController, CommentsController],
   providers: [JwtStrategy],
   exports: [PassportModule, JwtModule],
 })

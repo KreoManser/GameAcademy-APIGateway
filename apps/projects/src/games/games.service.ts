@@ -1,4 +1,3 @@
-// src/games/games.service.ts
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -27,7 +26,7 @@ export class GamesService {
     coverBuffer?: Buffer,
     coverName?: string,
     coverMime?: string,
-    playable = false, // ← новый аргумент
+    playable = false,
   ): Promise<GameDocument> {
     const prefix = randomBytes(4).toString('hex') + '/';
     const modelsKeys: string[] = [];
@@ -99,7 +98,7 @@ export class GamesService {
       images: imagesKeys,
       videos: videosKeys,
       cover: `${prefix}cover/${coverName}`,
-      playable, // ← сохраняем флаг
+      playable,
     });
     return game.save();
   }
