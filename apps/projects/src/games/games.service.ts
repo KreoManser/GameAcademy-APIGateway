@@ -1,5 +1,5 @@
 // src/games/games.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Game, GameDocument } from './schemas/game.schema';
@@ -8,12 +8,14 @@ import { MinioService } from '../minio/minio.service';
 import * as unzipper from 'unzipper';
 import { randomBytes } from 'crypto';
 import multer from 'multer';
+import { DuplicateService } from '../duplicate/duplicate.service';
 
 @Injectable()
 export class GamesService {
   constructor(
     @InjectModel(Game.name) private gameModel: Model<GameDocument>,
     private minio: MinioService,
+    private duplicate: DuplicateService,
   ) {}
 
   async create(
@@ -34,6 +36,12 @@ export class GamesService {
 
     // 1) Билд WebGL
     if (playable && gameBuffer) {
+      const { isDuplicate, record } = await this.duplicate.checkOrRegister(gameBuffer, `${createDto.title}-build.zip`, {
+        type: 'build',
+      });
+      if (isDuplicate) {
+        throw new ConflictException(`Duplicate build detected (id: ${record._id})`);
+      }
       const dir = await unzipper.Open.buffer(gameBuffer);
       await Promise.all(
         dir.files.map(async (e) => {
