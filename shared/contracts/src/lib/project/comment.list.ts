@@ -1,5 +1,5 @@
 export namespace CommentList {
-  export const topic = 'comment.list.query';
+  export const topic = 'account.list.query';
   export class Request {
     gameId: string;
   }

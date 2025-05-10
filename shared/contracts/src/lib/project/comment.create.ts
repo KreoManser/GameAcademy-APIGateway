@@ -1,5 +1,5 @@
 export namespace CommentCreate {
-  export const topic = 'comment.create.command';
+  export const topic = 'account.create.command';
   export class Request {
     gameId: string;
     parent?: string;

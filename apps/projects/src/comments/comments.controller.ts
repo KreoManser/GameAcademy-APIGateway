@@ -9,7 +9,7 @@ import { CommentsService } from './comments.service';
 export class CommentsController {
   constructor(private readonly svc: CommentsService) {}
 
-  @RMQValidate()
+  //   @RMQValidate()
   @RMQRoute(CommentCreate.topic)
   async create(@Body() dto: CommentCreate.Request & { userId: string }) {
     // отделяем userId, остальное — это CreateCommentDto
