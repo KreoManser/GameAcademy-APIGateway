@@ -59,6 +59,12 @@ export class GamesService {
     // 2) Модели
     if (modelFiles) {
       for (const f of modelFiles) {
+        const { isDuplicate, record } = await this.duplicate.checkOrRegister(f.buffer, f.originalname, {
+          type: 'model',
+        });
+        if (isDuplicate) {
+          throw new ConflictException(`Duplicate model "${f.originalname}" (id: ${record._id})`);
+        }
         const key = `${prefix}models/${f.originalname}`;
         await this.minio.uploadModel(key, f.buffer, f.mimetype);
         modelsKeys.push(key);

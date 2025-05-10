@@ -1,5 +1,5 @@
 import { Body, Controller } from '@nestjs/common';
-import { AccountUserInfo } from '@shared/contracts';
+import { AccountUserInfo, UserList } from '@shared/contracts';
 import { RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { UserEntity } from './entities/user.entity';
 import { UserRepository } from './repos/user.repository';
@@ -14,5 +14,18 @@ export class UserQueries {
     const user = await this.userRepository.findUserById(id);
     const profile = new UserEntity(user).getPublicProfile();
     return { profile };
+  }
+
+  @RMQRoute(UserList.topic)
+  async listUsers(): Promise<UserList.Response> {
+    const users = await this.userRepository.findAllUsers();
+    // приводим к нужному контракту
+    return {
+      users: users.map((u) => ({
+        email: u.email,
+        displayName: u.displayName,
+        role: u.role,
+      })),
+    };
   }
 }

@@ -4,6 +4,7 @@ import { RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { THIS_USER_IS_NOT_EXISTS } from '../auth/others/account.constants';
 import { UserEntity } from './entities/user.entity';
 import { UserRepository } from './repos/user.repository';
+import { AccountDeleteUser } from '@shared/contracts';
 
 @Controller()
 export class UserCommands {
@@ -29,5 +30,16 @@ export class UserCommands {
     userEntity.role = dto.newRole;
     await this.userRepository.updateUserById(userEntity);
     return { profile: userEntity.getPublicProfile() };
+  }
+
+  @RMQValidate()
+  @RMQRoute(AccountDeleteUser.topic)
+  async deleteUser(@Body() { email }: AccountDeleteUser.Request): Promise<AccountDeleteUser.Response> {
+    const user = await this.userRepository.findUser(email);
+    if (!user) {
+      throw new Error('Пользователь не найден');
+    }
+    await this.userRepository.deleteUser(email);
+    return { success: true };
   }
 }

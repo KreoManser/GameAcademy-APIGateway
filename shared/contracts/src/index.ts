@@ -3,6 +3,8 @@ export * from './lib/account/account.change-role';
 export * from './lib/account/account.login';
 export * from './lib/account/account.register';
 export * from './lib/account/account.user-info';
+export * from './lib/account/account.user-list';
+export * from './lib/account/account.delete-user';
 export * from './lib/project/game.create';
 export * from './lib/project/game.get-all';
 export * from './lib/project/comment.create';

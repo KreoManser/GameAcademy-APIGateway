@@ -1,5 +1,10 @@
-import { IUser } from '@shared/interfaces';
-import { IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ValidateNested, IsString } from 'class-validator';
+
+class ChangeProfileDto {
+  @IsString()
+  displayName: string;
+}
 
 export namespace AccountChangeProfile {
   export const topic = 'account.change-profile.command';
@@ -8,8 +13,9 @@ export namespace AccountChangeProfile {
     @IsString()
     id: string;
 
-    @IsString()
-    user: Pick<IUser, 'displayName'>;
+    @ValidateNested()
+    @Type(() => ChangeProfileDto)
+    user: ChangeProfileDto; // now this is a real class
   }
 
   export class Response {}
