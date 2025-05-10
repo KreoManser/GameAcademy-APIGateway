@@ -9,8 +9,8 @@ import { MinioModule } from './minio/minio.module';
 import { CommentsModule } from './comments/comments.module';
 import { getRMQConfig } from './configs/rmq.config';
 import { RMQModule } from 'nestjs-rmq';
-import { DuplicateService } from './duplicate/duplicate.service';
 import { DuplicateModule } from './duplicate/duplicate.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -24,6 +24,7 @@ import { DuplicateModule } from './duplicate/duplicate.module';
     CommentsModule,
     GamesModule,
     DuplicateModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

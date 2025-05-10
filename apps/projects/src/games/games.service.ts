@@ -130,4 +130,9 @@ export class GamesService {
     if (!game) throw new NotFoundException('Game not found');
     return game;
   }
+
+  async remove(id: string): Promise<void> {
+    const game = await this.gameModel.findByIdAndDelete(id).exec();
+    if (!game) throw new NotFoundException('Game not found');
+  }
 }

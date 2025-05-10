@@ -35,4 +35,13 @@ export class DuplicateService {
     const created = await this.dupModel.create({ hash, originalName, metadata });
     return { isDuplicate: false, record: created };
   }
+
+  async findAll() {
+    return this.dupModel.find().sort({ _id: -1 }).exec();
+  }
+
+  /** Удалить запись дубликата по id */
+  async remove(id: string): Promise<void> {
+    await this.dupModel.findByIdAndDelete(id).exec();
+  }
 }
