@@ -9,3 +9,4 @@ export * from './lib/project/game.create';
 export * from './lib/project/game.get-all';
 export * from './lib/project/comment.create';
 export * from './lib/project/comment.list';
+export * from './lib/account/account.user-search';

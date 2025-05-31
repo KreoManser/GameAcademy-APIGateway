@@ -1,5 +1,5 @@
 // src/games/dto/create-game.dto.ts
-import { IsString, IsOptional, IsArray, ArrayNotEmpty, ArrayUnique, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsArray, ArrayNotEmpty, ArrayUnique, IsUrl, IsMongoId } from 'class-validator';
 
 export class CreateGameDto {
   @IsString() title: string;
@@ -18,5 +18,11 @@ export class CreateGameDto {
 
   @IsOptional()
   @IsUrl()
-  githubUrl?: string; // ← новая ссылка на репозиторий
+  githubUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsMongoId({ each: true })
+  authors?: string[];
 }

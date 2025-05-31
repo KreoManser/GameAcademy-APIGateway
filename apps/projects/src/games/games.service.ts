@@ -1,12 +1,12 @@
+// src/games/games.service.ts
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Game, GameDocument } from './schemas/game.schema';
 import { CreateGameDto } from './dto/create-game.dto';
 import { MinioService } from '../minio/minio.service';
 import * as unzipper from 'unzipper';
 import { randomBytes } from 'crypto';
-import multer from 'multer';
 import { DuplicateService } from '../duplicate/duplicate.service';
 
 @Injectable()
@@ -33,7 +33,7 @@ export class GamesService {
     const imagesKeys: string[] = [];
     const videosKeys: string[] = [];
 
-    // 1) Билд WebGL
+    // 1) WebGL-билд с проверкой дубликата
     if (playable && gameBuffer) {
       const { isDuplicate, record } = await this.duplicate.checkOrRegister(gameBuffer, `${createDto.title}-build.zip`, {
         type: 'build',
@@ -96,16 +96,20 @@ export class GamesService {
     const coverKey = `${prefix}cover/${coverName}`;
     await this.minio.uploadImage(coverKey, coverBuffer, coverMime);
 
-    // 6) Сохраняем в Mongo
-    const game = new this.gameModel({
-      ...createDto,
+    // 6) Сохраняем документ в Mongo
+    const gameData: Partial<Game> = {
+      ...createDto, // в том числе: title, description, uploader, genres[], cover, githubUrl, playable
       prefix,
       models: modelsKeys,
       images: imagesKeys,
       videos: videosKeys,
       cover: `${prefix}cover/${coverName}`,
       playable,
-    });
+      // превратим массив строк createDto.authors? в массив ObjectId
+      authors: createDto.authors?.map((id) => new Types.ObjectId(id)) || [],
+    };
+
+    const game = new this.gameModel(gameData);
     return game.save();
   }
 
@@ -118,7 +122,6 @@ export class GamesService {
 
     if (q) {
       const regex = new RegExp(q, 'i');
-      // Если одновременно есть uploader и q — поиск внутри его игр
       filter.$or = [{ title: regex }, { description: regex }, { genres: q }];
     }
 

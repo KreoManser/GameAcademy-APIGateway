@@ -1,7 +1,7 @@
 // api/src/controllers/user.controller.ts
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
-import { AccountUserInfo, AccountChangeRole, UserList, AccountDeleteUser } from '@shared/contracts';
+import { AccountUserInfo, AccountChangeRole, UserList, AccountDeleteUser, UserSearch } from '@shared/contracts';
 import { JWTAuthGuard } from '../guards/jwt.guard';
 import { UserId } from '../guards/user.decorator';
 import { Roles } from '../guards/roles.guard';
@@ -43,5 +43,12 @@ export class UserController {
   @Post('delete')
   async delete(@Body() dto: AccountDeleteUser.Request): Promise<AccountDeleteUser.Response> {
     return this.rmqService.send<AccountDeleteUser.Request, AccountDeleteUser.Response>(AccountDeleteUser.topic, dto);
+  }
+
+  @UseGuards(JWTAuthGuard)
+  @Get('search')
+  async search(@Query('query') query?: string): Promise<UserSearch.Response> {
+    // просто отсылаем RMQ-запрос в микросервис accounts
+    return this.rmqService.send<UserSearch.Request, UserSearch.Response>(UserSearch.topic, { query });
   }
 }

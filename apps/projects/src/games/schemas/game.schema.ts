@@ -1,6 +1,6 @@
 // src/games/schemas/game.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type GameDocument = Game & Document;
 
@@ -27,6 +27,9 @@ export class Game {
   @Prop() githubUrl?: string;
 
   @Prop({ default: false }) playable: boolean;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  authors: Types.ObjectId[];
 }
 
 export const GameSchema = SchemaFactory.createForClass(Game);

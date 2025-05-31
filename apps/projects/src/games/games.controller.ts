@@ -37,13 +37,12 @@ export class GamesController {
       images?: Express.Multer.File[];
       videos?: Express.Multer.File[];
     },
-    @Body() createDto: CreateGameDto,
+    @Body() createDto: CreateGameDto, // ← здесь появится поле createDto.authors
   ) {
     const coverFile = files.cover?.[0];
     if (!coverFile) throw new BadRequestException('Cover image is required');
 
     const gameFile = files.file?.[0];
-    // Если нет ZIP и нет ссылки — ошибка
     if (!gameFile && !createDto.githubUrl) {
       throw new BadRequestException('Either a ZIP build or a GitHub URL must be provided');
     }
@@ -61,17 +60,21 @@ export class GamesController {
     );
   }
 
-  // src/games/games.controller.ts
   @Get()
-  async list(
-    @Query('q') q?: string,
-    @Query('uploader') uploader?: string, // ← добавили
-  ) {
+  async list(@Query('q') q?: string, @Query('uploader') uploader?: string) {
     return this.gamesService.findAll(q, uploader);
   }
 
   @Get(':id')
   async one(@Param('id') id: string) {
     return this.gamesService.findOne(id);
+  }
+
+  // Возможный endpoint для удаления игры (если понадобится)
+  @Post('delete')
+  async delete(@Body('id') id: string) {
+    if (!id) throw new BadRequestException('Id required');
+    await this.gamesService.remove(id);
+    return { success: true };
   }
 }
