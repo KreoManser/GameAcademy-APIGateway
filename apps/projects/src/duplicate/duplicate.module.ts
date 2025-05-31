@@ -1,4 +1,3 @@
-// src/duplicate/duplicate.module.ts
 import { Global, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Duplicate, DuplicateSchema } from './schemas/duplicate.schema';

@@ -1,4 +1,3 @@
-// src/games/schemas/game.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
@@ -20,7 +19,8 @@ export class Game {
 
   @Prop({ type: [String], default: [] }) genres: string[];
 
-  @Prop({ required: true }) uploader: string;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  uploader: Types.ObjectId;
 
   @Prop({ required: true }) cover: string;
 

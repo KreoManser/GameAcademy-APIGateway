@@ -1,4 +1,3 @@
-// src/comments/comments.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -27,7 +26,6 @@ export class CommentsService {
       .lean()
       .exec();
 
-    // строим дерево: сначала все топ‑level, потом вложенные
     const map = new Map<string, any[]>();
     docs.forEach((c) => {
       const key = c.parent?.toString() || 'root';

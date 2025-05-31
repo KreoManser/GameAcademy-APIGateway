@@ -43,10 +43,6 @@ export class UserRepository {
   async searchByDisplayName(searchTerm?: string): Promise<IUser[]> {
     const regex = searchTerm?.trim() ? new RegExp(searchTerm.trim(), 'i') : null;
     const filter = regex ? { displayName: regex } : {};
-    return this.userModel
-      .find(filter)
-      .select('_id email displayName role') // <— добавил "_id"
-      .lean()
-      .exec();
+    return this.userModel.find(filter).select('_id email displayName role').lean().exec();
   }
 }

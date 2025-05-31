@@ -1,4 +1,3 @@
-// shared/contracts/src/lib/account/account.change-role.ts
 import { IUser, UserRole } from '@shared/interfaces';
 import { IsEnum, IsString } from 'class-validator';
 

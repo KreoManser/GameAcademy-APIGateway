@@ -1,4 +1,3 @@
-// src/admin/admin-games.controller.ts
 import { Controller, Get, Post, Body, BadRequestException } from '@nestjs/common';
 import { GamesService } from '../games/games.service';
 import { RMQService } from 'nestjs-rmq';
@@ -11,22 +10,25 @@ export class AdminGamesController {
     private readonly rmqService: RMQService,
   ) {}
 
-  // GET /admin/games
   @Get()
   async listAll() {
     const games = await this.gamesService.findAll();
+
     const enriched = await Promise.all(
       games.map(async (g) => {
-        let uploaderLabel = g.uploader; // fallback — просто id
+        const uploaderIdStr = g.uploader.toString();
+
+        let uploaderLabel = uploaderIdStr;
         try {
           const { profile } = await this.rmqService.send<AccountUserInfo.Request, AccountUserInfo.Response>(
             AccountUserInfo.topic,
-            { id: g.uploader },
+            { id: uploaderIdStr },
           );
           uploaderLabel = `${profile.displayName} (${profile.email})`;
         } catch {
-          // если не удалось, оставляем id или ставим "Unknown"
+          /* empty */
         }
+
         return {
           _id: g._id.toString(),
           title: g.title,
@@ -35,11 +37,10 @@ export class AdminGamesController {
         };
       }),
     );
+
     return { games: enriched };
   }
 
-  //   createdAt: g.get('createdAt') as Date,
-  // POST /admin/games/delete
   @Post('delete')
   async delete(@Body('id') id: string) {
     if (!id) throw new BadRequestException('Id required');

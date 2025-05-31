@@ -1,4 +1,3 @@
-// src/games/games.module.ts
 import { Module } from '@nestjs/common';
 import { GamesService } from './games.service';
 import { GamesController } from './games.controller';

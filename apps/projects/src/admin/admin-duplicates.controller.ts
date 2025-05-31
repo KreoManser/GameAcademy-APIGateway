@@ -1,4 +1,3 @@
-// src/admin/admin-duplicates.controller.ts
 import { Controller, Get, Post, Body, BadRequestException } from '@nestjs/common';
 import { DuplicateService } from '../duplicate/duplicate.service';
 
@@ -6,7 +5,6 @@ import { DuplicateService } from '../duplicate/duplicate.service';
 export class AdminDuplicatesController {
   constructor(private readonly duplicateService: DuplicateService) {}
 
-  // GET /api/admin/duplicates
   @Get()
   async listAll() {
     const items = await this.duplicateService.findAll();
@@ -19,7 +17,6 @@ export class AdminDuplicatesController {
     };
   }
 
-  // POST /api/admin/duplicates/delete
   @Post('delete')
   async delete(@Body('id') id: string) {
     if (!id) throw new BadRequestException('Id required');

@@ -6,7 +6,6 @@ import { RMQModule } from 'nestjs-rmq';
 import { getJwtConfig } from './configs/jwt.config';
 import { getRMQConfig } from './configs/rmq.config';
 import { AuthContoller } from './controllers/auth.controller';
-// import { ProjectController } from './controllers/project.controller';
 import { UserController } from './controllers/user.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { CommentsController } from './controllers/comments.controller';

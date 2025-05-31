@@ -1,4 +1,3 @@
-// api/src/controllers/comments.controller.ts
 import { Controller, Post, Get, Body, Query, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 import { JWTAuthGuard } from '../guards/jwt.guard';
@@ -12,7 +11,6 @@ export class CommentsController {
   @UseGuards(JWTAuthGuard)
   @Post()
   async create(@Body() dto: CommentCreate.Request, @Req() req: Request): Promise<CommentCreate.Response> {
-    // req.user — здесь просто строка userId
     const userId = req.user as string;
 
     if (!dto.content.trim()) {

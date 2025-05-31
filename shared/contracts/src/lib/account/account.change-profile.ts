@@ -15,7 +15,7 @@ export namespace AccountChangeProfile {
 
     @ValidateNested()
     @Type(() => ChangeProfileDto)
-    user: ChangeProfileDto; // now this is a real class
+    user: ChangeProfileDto;
   }
 
   export class Response {}

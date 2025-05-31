@@ -1,4 +1,3 @@
-// src/guards/roles.guard.ts
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@shared/interfaces';
@@ -15,6 +14,5 @@ export class RolesGuard implements CanActivate {
   }
 }
 
-// декоратор
 import { SetMetadata } from '@nestjs/common';
 export const Roles = (...roles: UserRole[]) => SetMetadata('roles', roles);

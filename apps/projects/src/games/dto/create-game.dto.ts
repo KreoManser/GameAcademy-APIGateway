@@ -1,4 +1,3 @@
-// src/games/dto/create-game.dto.ts
 import { IsString, IsOptional, IsArray, ArrayNotEmpty, ArrayUnique, IsUrl, IsMongoId } from 'class-validator';
 
 export class CreateGameDto {
@@ -6,7 +5,9 @@ export class CreateGameDto {
 
   @IsString() description: string;
 
-  @IsString() uploader: string;
+  @IsMongoId()
+  @IsString()
+  uploader: string;
 
   @IsArray()
   @ArrayNotEmpty()

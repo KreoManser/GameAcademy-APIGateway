@@ -33,7 +33,6 @@ export class UserQueries {
   @RMQRoute(UserList.topic)
   async listUsers(): Promise<UserList.Response> {
     const users = await this.userRepository.findAllUsers();
-    // приводим к нужному контракту
     return {
       users: users.map((u) => ({
         email: u.email,

@@ -1,4 +1,3 @@
-// src/minio/minio.service.ts
 import {
   S3Client,
   PutObjectCommand,
@@ -45,7 +44,6 @@ export class MinioService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    // убеждаемся, что все бакеты существуют
     for (const name of [this.bucket, this.modelsBucket, this.imagesBucket, this.videosBucket]) {
       await this.ensureBucketExists(name);
     }
@@ -94,7 +92,6 @@ export class MinioService implements OnModuleInit {
     }
   }
 
-  // Удобные методы
   uploadBuild(key: string, body: Buffer, contentType: string, contentEncoding?: string) {
     return this.uploadObject(this.bucket, key, body, contentType, contentEncoding);
   }

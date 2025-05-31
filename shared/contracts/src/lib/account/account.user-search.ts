@@ -1,4 +1,3 @@
-// shared/contracts/src/lib/account/user.search.ts
 import { IsOptional, IsString } from 'class-validator';
 
 export namespace UserSearch {

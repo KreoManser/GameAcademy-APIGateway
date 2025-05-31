@@ -1,5 +1,3 @@
-// projects/src/duplicate/duplicate.controller.ts
-
 import { Controller, Post, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DuplicateService } from './duplicate.service';
@@ -19,7 +17,6 @@ export class DuplicateController {
       throw new BadRequestException('Файл не получен');
     }
 
-    // metadata можно дополучить из file.mimetype, file.size и т.п.
     const metadata = {
       mimetype: file.mimetype,
       size: file.size,

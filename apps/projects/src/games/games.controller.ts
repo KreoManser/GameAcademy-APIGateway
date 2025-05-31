@@ -1,4 +1,3 @@
-// src/games/games.controller.ts
 import {
   Controller,
   Post,
@@ -37,7 +36,7 @@ export class GamesController {
       images?: Express.Multer.File[];
       videos?: Express.Multer.File[];
     },
-    @Body() createDto: CreateGameDto, // ← здесь появится поле createDto.authors
+    @Body() createDto: CreateGameDto,
   ) {
     const coverFile = files.cover?.[0];
     if (!coverFile) throw new BadRequestException('Cover image is required');
@@ -70,7 +69,6 @@ export class GamesController {
     return this.gamesService.findOne(id);
   }
 
-  // Возможный endpoint для удаления игры (если понадобится)
   @Post('delete')
   async delete(@Body('id') id: string) {
     if (!id) throw new BadRequestException('Id required');

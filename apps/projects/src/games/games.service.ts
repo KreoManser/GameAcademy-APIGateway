@@ -1,4 +1,3 @@
-// src/games/games.service.ts
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -33,7 +32,6 @@ export class GamesService {
     const imagesKeys: string[] = [];
     const videosKeys: string[] = [];
 
-    // 1) WebGL-билд с проверкой дубликата
     if (playable && gameBuffer) {
       const { isDuplicate, record } = await this.duplicate.checkOrRegister(gameBuffer, `${createDto.title}-build.zip`, {
         type: 'build',
@@ -56,7 +54,6 @@ export class GamesService {
       );
     }
 
-    // 2) Модели
     if (modelFiles) {
       for (const f of modelFiles) {
         const { isDuplicate, record } = await this.duplicate.checkOrRegister(f.buffer, f.originalname, {
@@ -71,7 +68,6 @@ export class GamesService {
       }
     }
 
-    // 3) Изображения
     if (imageFiles) {
       for (const f of imageFiles) {
         const key = `${prefix}images/${f.originalname}`;
@@ -80,7 +76,6 @@ export class GamesService {
       }
     }
 
-    // 4) Видео
     if (videoFiles) {
       for (const f of videoFiles) {
         const key = `${prefix}videos/${f.originalname}`;
@@ -89,24 +84,28 @@ export class GamesService {
       }
     }
 
-    // 5) Cover
     if (!coverBuffer || !coverName || !coverMime) {
       throw new NotFoundException('Cover missing');
     }
     const coverKey = `${prefix}cover/${coverName}`;
     await this.minio.uploadImage(coverKey, coverBuffer, coverMime);
 
-    // 6) Сохраняем документ в Mongo
+    const uploaderObjectId = new Types.ObjectId(createDto.uploader);
+    const authorsObjectIds = (createDto.authors || []).map((id) => new Types.ObjectId(id));
+
     const gameData: Partial<Game> = {
-      ...createDto, // в том числе: title, description, uploader, genres[], cover, githubUrl, playable
-      prefix,
+      title: createDto.title,
+      description: createDto.description,
+      uploader: uploaderObjectId,
+      authors: authorsObjectIds,
+      genres: createDto.genres,
+      cover: `${prefix}cover/${coverName}`,
+      githubUrl: createDto.githubUrl,
+      playable,
       models: modelsKeys,
       images: imagesKeys,
       videos: videosKeys,
-      cover: `${prefix}cover/${coverName}`,
-      playable,
-      // превратим массив строк createDto.authors? в массив ObjectId
-      authors: createDto.authors?.map((id) => new Types.ObjectId(id)) || [],
+      prefix,
     };
 
     const game = new this.gameModel(gameData);
@@ -117,12 +116,24 @@ export class GamesService {
     const filter: any = {};
 
     if (uploader) {
-      filter.uploader = uploader;
+      const orConditions: any[] = [{ uploader }];
+
+      if (Types.ObjectId.isValid(uploader)) {
+        orConditions.push({ authors: new Types.ObjectId(uploader) });
+      }
+
+      filter.$or = orConditions;
     }
 
     if (q) {
       const regex = new RegExp(q, 'i');
-      filter.$or = [{ title: regex }, { description: regex }, { genres: q }];
+
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: [{ title: regex }, { description: regex }, { genres: q }] }];
+        delete filter.$or;
+      } else {
+        filter.$or = [{ title: regex }, { description: regex }, { genres: q }];
+      }
     }
 
     return this.gameModel.find(filter).sort({ createdAt: -1 }).exec();

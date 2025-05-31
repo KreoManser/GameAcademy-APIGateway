@@ -1,4 +1,3 @@
-// api/src/controllers/user.controller.ts
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 import { AccountUserInfo, AccountChangeRole, UserList, AccountDeleteUser, UserSearch } from '@shared/contracts';
@@ -14,11 +13,8 @@ export class UserController {
 
   @UseGuards(JWTAuthGuard)
   @Post('info')
-  async info(@UserId() userId: string) {
-    // тут гарантированно строка
-    return this.rmqService.send<AccountUserInfo.Request, AccountUserInfo.Response>(AccountUserInfo.topic, {
-      id: userId,
-    });
+  async info(@UserId() userIdFromToken: string, @Body() { id }: AccountUserInfo.Request) {
+    return this.rmqService.send<AccountUserInfo.Request, AccountUserInfo.Response>(AccountUserInfo.topic, { id });
   }
 
   @UseGuards(JWTAuthGuard)
@@ -33,7 +29,6 @@ export class UserController {
     return this.rmqService.send<UserList.Request, UserList.Response>(UserList.topic, {});
   }
 
-  // Смена роли
   @Post('users/change-role')
   @Roles(UserRole.Admin)
   async changeRoleAdmin(@Body() dto: AccountChangeRole.Request): Promise<AccountChangeRole.Response> {
@@ -48,7 +43,6 @@ export class UserController {
   @UseGuards(JWTAuthGuard)
   @Get('search')
   async search(@Query('query') query?: string): Promise<UserSearch.Response> {
-    // просто отсылаем RMQ-запрос в микросервис accounts
     return this.rmqService.send<UserSearch.Request, UserSearch.Response>(UserSearch.topic, { query });
   }
 }
