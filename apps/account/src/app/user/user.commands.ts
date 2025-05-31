@@ -1,7 +1,7 @@
 import { Body, Controller } from '@nestjs/common';
-import { AccountChangeProfile, AccountChangeRole } from '@shared/contracts';
+import { AccountChangePasswordProfile, AccountChangeProfile, AccountChangeRole } from '@shared/contracts';
 import { RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { THIS_USER_IS_NOT_EXISTS } from '../auth/others/account.constants';
+import { THIS_USER_IS_NOT_EXISTS, WRONG_OLD_PASSWORD } from '../auth/others/account.constants';
 import { UserEntity } from './entities/user.entity';
 import { UserRepository } from './repos/user.repository';
 import { AccountDeleteUser } from '@shared/contracts';
@@ -40,6 +40,29 @@ export class UserCommands {
       throw new Error('Пользователь не найден');
     }
     await this.userRepository.deleteUser(email);
+    return { success: true };
+  }
+
+  @RMQValidate()
+  @RMQRoute(AccountChangePasswordProfile.topic)
+  async changePassword(
+    @Body() { id, passwords }: AccountChangePasswordProfile.Request,
+  ): Promise<AccountChangePasswordProfile.Response> {
+    // 1) Найдём пользователя по id
+    const existedUser = await this.userRepository.findUserById(id);
+    if (!existedUser) throw new Error(THIS_USER_IS_NOT_EXISTS);
+
+    // 2) Проверим правильность старого пароля
+    const userEntity = new UserEntity(existedUser);
+    const isOldValid = await userEntity.validatePassword(passwords.oldPassword);
+    if (!isOldValid) throw new Error(WRONG_OLD_PASSWORD);
+
+    // 3) Установим новый пароль (хешируется внутри setPassword)
+    await userEntity.setPassword(passwords.newPassword);
+
+    // 4) Сохраним в БД
+    await this.userRepository.updateUserById(userEntity);
+
     return { success: true };
   }
 }

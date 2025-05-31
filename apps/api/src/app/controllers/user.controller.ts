@@ -1,6 +1,13 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
-import { AccountUserInfo, AccountChangeRole, UserList, AccountDeleteUser, UserSearch } from '@shared/contracts';
+import {
+  AccountUserInfo,
+  AccountChangeRole,
+  UserList,
+  AccountDeleteUser,
+  UserSearch,
+  AccountChangePasswordProfile,
+} from '@shared/contracts';
 import { JWTAuthGuard } from '../guards/jwt.guard';
 import { UserId } from '../guards/user.decorator';
 import { Roles } from '../guards/roles.guard';
@@ -44,5 +51,21 @@ export class UserController {
   @Get('search')
   async search(@Query('query') query?: string): Promise<UserSearch.Response> {
     return this.rmqService.send<UserSearch.Request, UserSearch.Response>(UserSearch.topic, { query });
+  }
+
+  @UseGuards(JWTAuthGuard)
+  @Post('change-password')
+  async changePassword(
+    @UserId() userIdFromToken: string,
+    @Body() body: { oldPassword: string; newPassword: string },
+  ): Promise<AccountChangePasswordProfile.Response> {
+    const { oldPassword, newPassword } = body;
+    return this.rmqService.send<AccountChangePasswordProfile.Request, AccountChangePasswordProfile.Response>(
+      AccountChangePasswordProfile.topic,
+      {
+        id: userIdFromToken,
+        passwords: { oldPassword, newPassword },
+      },
+    );
   }
 }
