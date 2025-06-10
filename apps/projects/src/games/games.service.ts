@@ -8,6 +8,9 @@ import * as unzipper from 'unzipper';
 import { randomBytes } from 'crypto';
 import { DuplicateService } from '../duplicate/duplicate.service';
 
+export const toArray = (val: unknown): string[] =>
+  Array.isArray(val) ? val : val === undefined || val === null ? [] : [String(val)];
+
 @Injectable()
 export class GamesService {
   constructor(
@@ -28,17 +31,30 @@ export class GamesService {
     playable = false,
   ): Promise<GameDocument> {
     const prefix = randomBytes(4).toString('hex') + '/';
+
+    if (playable && gameBuffer) {
+      const res = await this.duplicate.checkOrRegister(
+        gameBuffer,
+        `${createDto.title}-build.zip`,
+        { type: 'build' },
+        { dryRun: true },
+      );
+      if (res.duplicate) throw new ConflictException(`Duplicate build (id: ${res.record._id})`);
+    }
+
+    const stagedModels = modelFiles ? [...modelFiles] : [];
+    for (const f of stagedModels) {
+      const res = await this.duplicate.checkOrRegister(f.buffer, f.originalname, { type: 'model' }, { dryRun: true });
+      if (res.duplicate) throw new ConflictException(`Duplicate model "${f.originalname}" (id: ${res.record._id})`);
+    }
+
     const modelsKeys: string[] = [];
     const imagesKeys: string[] = [];
     const videosKeys: string[] = [];
 
     if (playable && gameBuffer) {
-      const { isDuplicate, record } = await this.duplicate.checkOrRegister(gameBuffer, `${createDto.title}-build.zip`, {
-        type: 'build',
-      });
-      if (isDuplicate) {
-        throw new ConflictException(`Duplicate build detected (id: ${record._id})`);
-      }
+      await this.duplicate.checkOrRegister(gameBuffer, `${createDto.title}-build.zip`, { type: 'build' });
+
       const dir = await unzipper.Open.buffer(gameBuffer);
       await Promise.all(
         dir.files.map(async (e) => {
@@ -54,18 +70,11 @@ export class GamesService {
       );
     }
 
-    if (modelFiles) {
-      for (const f of modelFiles) {
-        const { isDuplicate, record } = await this.duplicate.checkOrRegister(f.buffer, f.originalname, {
-          type: 'model',
-        });
-        if (isDuplicate) {
-          throw new ConflictException(`Duplicate model "${f.originalname}" (id: ${record._id})`);
-        }
-        const key = `${prefix}models/${f.originalname}`;
-        await this.minio.uploadModel(key, f.buffer, f.mimetype);
-        modelsKeys.push(key);
-      }
+    for (const f of stagedModels) {
+      await this.duplicate.checkOrRegister(f.buffer, f.originalname, { type: 'model' });
+      const key = `${prefix}models/${f.originalname}`;
+      await this.minio.uploadModel(key, f.buffer, f.mimetype);
+      modelsKeys.push(key);
     }
 
     if (imageFiles) {
@@ -91,14 +100,15 @@ export class GamesService {
     await this.minio.uploadImage(coverKey, coverBuffer, coverMime);
 
     const uploaderObjectId = new Types.ObjectId(createDto.uploader);
-    const authorsObjectIds = (createDto.authors || []).map((id) => new Types.ObjectId(id));
+    const authorsObjectIds = toArray(createDto.authors).map((id) => new Types.ObjectId(id));
+    const genresArray = toArray(createDto.genres);
 
     const gameData: Partial<Game> = {
       title: createDto.title,
       description: createDto.description,
       uploader: uploaderObjectId,
       authors: authorsObjectIds,
-      genres: createDto.genres,
+      genres: genresArray,
       cover: `${prefix}cover/${coverName}`,
       githubUrl: createDto.githubUrl,
       playable,

@@ -48,19 +48,15 @@ export class UserCommands {
   async changePassword(
     @Body() { id, passwords }: AccountChangePasswordProfile.Request,
   ): Promise<AccountChangePasswordProfile.Response> {
-    // 1) Найдём пользователя по id
     const existedUser = await this.userRepository.findUserById(id);
     if (!existedUser) throw new Error(THIS_USER_IS_NOT_EXISTS);
 
-    // 2) Проверим правильность старого пароля
     const userEntity = new UserEntity(existedUser);
     const isOldValid = await userEntity.validatePassword(passwords.oldPassword);
     if (!isOldValid) throw new Error(WRONG_OLD_PASSWORD);
 
-    // 3) Установим новый пароль (хешируется внутри setPassword)
     await userEntity.setPassword(passwords.newPassword);
 
-    // 4) Сохраним в БД
     await this.userRepository.updateUserById(userEntity);
 
     return { success: true };

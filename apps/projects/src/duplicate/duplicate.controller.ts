@@ -13,15 +13,13 @@ export class DuplicateController {
   @Post()
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50_000_000 } }))
   async upload(@UploadedFile() file: Express.Multer.File) {
-    if (!file || !file.buffer) {
-      throw new BadRequestException('Файл не получен');
+    if (!file?.buffer) throw new BadRequestException('Файл не получен');
+
+    if (!(file.buffer[0] === 0x50 && file.buffer[1] === 0x4b)) {
+      throw new BadRequestException('Ожидается ZIP-архив Unity WebGL сборки');
     }
 
-    const metadata = {
-      mimetype: file.mimetype,
-      size: file.size,
-    };
-
+    const metadata = { mimetype: file.mimetype, size: file.size };
     return this.dup.checkOrRegister(file.buffer, file.originalname, metadata);
   }
 }

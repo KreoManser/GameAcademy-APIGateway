@@ -16,6 +16,7 @@
     "@types/bcryptjs": "^2.4.6",
     "axios": "^1.6.0",
     "bcryptjs": "^3.0.2",
+    "jszip": "^3.10.1",
     "minio": "^8.0.5",
     "mongoose": "^8.14.0",
     "nestjs-rmq": "^2.14.0",

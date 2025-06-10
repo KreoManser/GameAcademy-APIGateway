@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, BadRequestException } from '@nestjs/common';
 import { DuplicateService } from '../duplicate/duplicate.service';
+import { Types } from 'mongoose';
 
 @Controller('admin/duplicates')
 export class AdminDuplicatesController {
@@ -11,8 +12,13 @@ export class AdminDuplicatesController {
     return {
       duplicates: items.map((d) => ({
         _id: d._id.toString(),
-        hash: d.hash,
+        zipHash: d.zipHash,
+        author: d.author,
+        productName: d.productName,
+        fileHashes: d.fileHashes,
         metadata: d.metadata,
+
+        createdAt: ((d.get('createdAt') as Date | undefined) ?? (d._id as Types.ObjectId).getTimestamp()).toISOString(),
       })),
     };
   }
